@@ -96,10 +96,9 @@ jobs:
           git push origin main --tags
 
       - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          VERSION="${{ inputs.version }}"
-          gh release create "v${VERSION}" "${{ env.TARBALL }}" \
-            --title "v${VERSION}" \
-            --generate-notes
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          name: v${{ inputs.version }}
+          generate_release_notes: true
+          files: ${{ env.TARBALL }}
