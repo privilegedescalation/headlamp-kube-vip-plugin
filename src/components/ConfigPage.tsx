@@ -122,15 +122,15 @@ export default function ConfigPage() {
               { name: 'Updated', value: String(daemonSetStatus.updatedNumberScheduled ?? 0) },
               ...(daemonSetStatus.numberMisscheduled
                 ? [
-                  {
-                    name: 'Misscheduled',
-                    value: (
-                      <StatusLabel status="warning">
-                        {daemonSetStatus.numberMisscheduled}
-                      </StatusLabel>
-                    ),
-                  },
-                ]
+                    {
+                      name: 'Misscheduled',
+                      value: (
+                        <StatusLabel status="warning">
+                          {daemonSetStatus.numberMisscheduled}
+                        </StatusLabel>
+                      ),
+                    },
+                  ]
                 : []),
             ]}
           />

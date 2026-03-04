@@ -350,8 +350,8 @@ export function parseIPPools(data: Record<string, string> | undefined): IPPool[]
       const type = poolName.startsWith('range-')
         ? 'range'
         : poolName.startsWith('cidr-')
-          ? 'cidr'
-          : 'unknown';
+        ? 'cidr'
+        : 'unknown';
       pools.push({
         name: poolName,
         type,

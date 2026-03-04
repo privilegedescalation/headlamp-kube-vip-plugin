@@ -68,21 +68,21 @@ export default function ServiceDetailSection({ resource }: ServiceDetailSectionP
           ...(vipHost ? [{ name: 'VIP Host Node', value: vipHost }] : []),
           ...(isEgressEnabled(svc)
             ? [
-              {
-                name: 'Egress',
-                value: <StatusLabel status="success">Enabled</StatusLabel>,
-              },
-            ]
+                {
+                  name: 'Egress',
+                  value: <StatusLabel status="success">Enabled</StatusLabel>,
+                },
+              ]
             : []),
           ...(isServiceIgnored(svc)
             ? [
-              {
-                name: 'Ignored',
-                value: (
-                  <StatusLabel status="warning">kube-vip is ignoring this service</StatusLabel>
-                ),
-              },
-            ]
+                {
+                  name: 'Ignored',
+                  value: (
+                    <StatusLabel status="warning">kube-vip is ignoring this service</StatusLabel>
+                  ),
+                },
+              ]
             : []),
           ...kubeVipAnnotations
             .filter(([key]) => key !== ANNOTATION_LOADBALANCER_IPS)

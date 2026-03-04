@@ -55,10 +55,10 @@ export default function OverviewPage() {
     kubeVipConfig['bgp_enable'] === 'true'
       ? 'BGP'
       : kubeVipConfig['vip_arp'] === 'true'
-        ? 'ARP'
-        : kubeVipPods.length > 0
-          ? 'Unknown'
-          : '—';
+      ? 'ARP'
+      : kubeVipPods.length > 0
+      ? 'Unknown'
+      : '—';
 
   const cpEnabled = kubeVipConfig['cp_enable'] === 'true';
   const svcEnabled = kubeVipConfig['svc_enable'] === 'true';
@@ -149,27 +149,27 @@ export default function OverviewPage() {
                 },
                 ...(daemonSetStatus
                   ? [
-                    {
-                      name: 'DaemonSet',
-                      value: `${daemonSetStatus.numberReady ?? 0}/${
-                        daemonSetStatus.desiredNumberScheduled ?? 0
-                      } ready`,
-                    },
-                  ]
+                      {
+                        name: 'DaemonSet',
+                        value: `${daemonSetStatus.numberReady ?? 0}/${
+                          daemonSetStatus.desiredNumberScheduled ?? 0
+                        } ready`,
+                      },
+                    ]
                   : []),
                 ...(cloudProviderPods.length > 0
                   ? [
-                    {
-                      name: 'Cloud Provider',
-                      value: (
-                        <StatusLabel
-                          status={cloudProviderPods.some(isPodReady) ? 'success' : 'warning'}
-                        >
-                          {cloudProviderPods.length} pod(s)
-                        </StatusLabel>
-                      ),
-                    },
-                  ]
+                      {
+                        name: 'Cloud Provider',
+                        value: (
+                          <StatusLabel
+                            status={cloudProviderPods.some(isPodReady) ? 'success' : 'warning'}
+                          >
+                            {cloudProviderPods.length} pod(s)
+                          </StatusLabel>
+                        ),
+                      },
+                    ]
                   : []),
               ]}
             />
@@ -184,11 +184,11 @@ export default function OverviewPage() {
                 { name: 'kube-vip Managed', value: String(kubeVipManaged.length) },
                 ...(egressEnabled.length > 0
                   ? [
-                    {
-                      name: 'Egress Enabled',
-                      value: String(egressEnabled.length),
-                    },
-                  ]
+                      {
+                        name: 'Egress Enabled',
+                        value: String(egressEnabled.length),
+                      },
+                    ]
                   : []),
                 { name: 'IP Pools', value: String(ipPools.length) },
                 { name: 'Leader Election Leases', value: String(leases.length) },

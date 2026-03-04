@@ -228,11 +228,11 @@ function ServiceDetailPanel({
               { label: 'Protocol', getter: p => p.protocol ?? 'TCP' },
               ...(service.spec.ports?.some((p: { nodePort?: number }) => p.nodePort)
                 ? [
-                  {
-                    label: 'NodePort',
-                    getter: (p: { nodePort?: number }) => String(p.nodePort ?? '—'),
-                  },
-                ]
+                    {
+                      label: 'NodePort',
+                      getter: (p: { nodePort?: number }) => String(p.nodePort ?? '—'),
+                    },
+                  ]
                 : []),
             ]}
             data={service.spec.ports}
