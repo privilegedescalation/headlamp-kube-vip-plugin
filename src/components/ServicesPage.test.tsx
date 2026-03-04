@@ -76,7 +76,7 @@ describe('ServicesPage', () => {
     const svc = makeSampleService();
     mockContext({ loadBalancerServices: [svc] });
     render(<ServicesPage />);
-    fireEvent.click(screen.getByLabelText('Close panel backdrop'));
+    fireEvent.click(screen.getByTestId('panel-backdrop'));
     expect(mockPush).toHaveBeenCalledWith('/kube-vip/services');
   });
 

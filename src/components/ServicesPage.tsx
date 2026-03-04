@@ -13,7 +13,7 @@ import {
   SimpleTable,
   StatusLabel,
 } from '@kinvolk/headlamp-plugin/lib/CommonComponents';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import {
   formatAge,
@@ -38,7 +38,10 @@ export default function ServicesPage() {
     ? loadBalancerServices.find(s => `${s.metadata.namespace}/${s.metadata.name}` === selectedName)
     : null;
 
-  const closePanel = () => history.push(location.pathname);
+  const closePanel = useCallback(
+    () => history.push(location.pathname),
+    [history, location.pathname]
+  );
 
   useEffect(() => {
     if (!selectedName) return;
@@ -47,7 +50,7 @@ export default function ServicesPage() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  });
+  }, [selectedName, closePanel]);
 
   if (loading) {
     return <Loader title="Loading services..." />;
@@ -111,7 +114,7 @@ export default function ServicesPage() {
             {
               label: 'kube-vip',
               getter: s => (
-                <StatusLabel status={isKubeVipService(s) ? 'success' : ''}>
+                <StatusLabel status={isKubeVipService(s) ? 'success' : 'info'}>
                   {isKubeVipService(s) ? 'Yes' : '—'}
                 </StatusLabel>
               ),
@@ -130,8 +133,9 @@ export default function ServicesPage() {
       {selectedService && (
         <>
           <div
+            role="presentation"
+            data-testid="panel-backdrop"
             onClick={closePanel}
-            aria-label="Close panel backdrop"
             style={{
               position: 'fixed',
               top: 0,
@@ -165,6 +169,9 @@ function ServiceDetailPanel({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Service Details"
       style={{
         position: 'fixed',
         top: 0,
@@ -221,11 +228,11 @@ function ServiceDetailPanel({
               { label: 'Protocol', getter: p => p.protocol ?? 'TCP' },
               ...(service.spec.ports?.some((p: { nodePort?: number }) => p.nodePort)
                 ? [
-                    {
-                      label: 'NodePort',
-                      getter: (p: { nodePort?: number }) => String(p.nodePort ?? '—'),
-                    },
-                  ]
+                  {
+                    label: 'NodePort',
+                    getter: (p: { nodePort?: number }) => String(p.nodePort ?? '—'),
+                  },
+                ]
                 : []),
             ]}
             data={service.spec.ports}

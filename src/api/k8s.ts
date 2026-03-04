@@ -210,7 +210,6 @@ export function isControlPlaneNode(node: KubeVipNode): boolean {
 export function getNodeVipLabel(node: KubeVipNode): string | undefined {
   const labels = node.metadata.labels ?? {};
   for (const [key, value] of Object.entries(labels)) {
-    if (key.startsWith('kube-vip.io/has-ip=')) return value;
     if (key === 'kube-vip.io/has-ip') return value;
   }
   return undefined;
@@ -351,8 +350,8 @@ export function parseIPPools(data: Record<string, string> | undefined): IPPool[]
       const type = poolName.startsWith('range-')
         ? 'range'
         : poolName.startsWith('cidr-')
-        ? 'cidr'
-        : 'unknown';
+          ? 'cidr'
+          : 'unknown';
       pools.push({
         name: poolName,
         type,

@@ -20,6 +20,7 @@ import {
   getNodeVipLabel,
   isControlPlaneNode,
   isNodeReady,
+  phaseToStatus,
 } from '../api/k8s';
 import { useKubeVipContext } from '../api/KubeVipDataContext';
 
@@ -83,7 +84,7 @@ export default function NodesPage() {
                   const pod = podByNode.get(n.metadata.name);
                   if (!pod) return '—';
                   return (
-                    <StatusLabel status={pod.status?.phase === 'Running' ? 'success' : 'warning'}>
+                    <StatusLabel status={phaseToStatus(pod.status?.phase)}>
                       {pod.status?.phase ?? 'Unknown'}
                     </StatusLabel>
                   );
@@ -127,7 +128,7 @@ export default function NodesPage() {
                   const pod = podByNode.get(n.metadata.name);
                   if (!pod) return '—';
                   return (
-                    <StatusLabel status={pod.status?.phase === 'Running' ? 'success' : 'warning'}>
+                    <StatusLabel status={phaseToStatus(pod.status?.phase)}>
                       {pod.status?.phase ?? 'Unknown'}
                     </StatusLabel>
                   );
