@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.headlamp-plugin/
+*.tar.gz
+.env
+.env.local
+.eslintcache
