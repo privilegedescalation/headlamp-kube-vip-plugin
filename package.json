@@ -1,6 +1,6 @@
 {
   "name": "kube-vip",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Headlamp plugin for kube-vip virtual IP and load balancer visibility",
   "repository": {
     "type": "git",
