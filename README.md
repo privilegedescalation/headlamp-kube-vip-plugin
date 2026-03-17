@@ -15,29 +15,7 @@ A [Headlamp](https://headlamp.dev/) plugin providing visibility into [kube-vip](
 
 ## Installation
 
-### Plugin Manager (Headlamp UI)
-
-Search for `kube-vip` in the Headlamp Plugin Manager.
-
-### Manual
-
-```bash
-# Download the latest release tarball
-curl -LO https://github.com/privilegedescalation/headlamp-kube-vip-plugin/releases/latest/download/kube-vip-*.tar.gz
-
-# Extract to Headlamp plugins directory
-mkdir -p ~/.config/Headlamp/plugins
-tar -xzf kube-vip-*.tar.gz -C ~/.config/Headlamp/plugins/
-```
-
-### From Source
-
-```bash
-git clone https://github.com/privilegedescalation/headlamp-kube-vip-plugin.git
-cd headlamp-kube-vip-plugin
-npm install
-npm run build
-```
+Search for `kube-vip` in the Headlamp Plugin Manager (Settings → Plugins → Catalog).
 
 ## Requirements
 
