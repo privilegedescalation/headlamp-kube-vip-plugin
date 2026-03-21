@@ -1,4 +1,4 @@
-version: "0.1.4"
+version: "0.1.5"
 name: headlamp-kube-vip
 displayName: kube-vip
 createdAt: "2026-03-04T00:00:00Z"
@@ -25,7 +25,7 @@ maintainers:
 provider:
   name: privilegedescalation
 annotations:
-  headlamp/plugin/archive-url: "https://github.com/privilegedescalation/headlamp-kube-vip-plugin/releases/download/v0.1.4/kube-vip-0.1.4.tar.gz"
-  headlamp/plugin/archive-checksum: sha256:d926d467a091e7b346afd3f6a09abc2205b7a8c290ecf65920f45df6206f7017
+  headlamp/plugin/archive-url: "https://github.com/privilegedescalation/headlamp-kube-vip-plugin/releases/download/v0.1.5/kube-vip-0.1.5.tar.gz"
+  headlamp/plugin/archive-checksum: sha256:6ba7c56fbac9237c0c478d5f9e77f7920b9fe24d9d28a2a68e0f85b91131a7c8
   headlamp/plugin/version-compat: ">=0.26"
   headlamp/plugin/distro-compat: "in-cluster"
