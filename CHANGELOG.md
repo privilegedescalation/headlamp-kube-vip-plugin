@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0] - 2026-03-24
+
+### Added
+
+- Add missing devDependencies to align with reference plugin: `@mui/material`, `@types/react`, `@types/react-dom`, `notistack`
+- Pin `vitest` to `^3.2.4`
+- Add dual-approval caller workflow for CI
+
+### Changed
+
+- Bump version from 0.1.5 to 1.0.0 (stable release)
+- Extend Renovate config from org-level preset
+- Add pinDigests for GitHub Actions SHA pinning
+
 ## [0.1.3] - 2026-03-04
 
 ### Fixed
@@ -38,3 +52,9 @@
 - Nodes page with kube-vip pod status and leader designation
 - Configuration page with DaemonSet config, IP pools, leases
 - Service detail section injected into native Headlamp Service views
+
+[1.0.0]: https://github.com/privilegedescalation/headlamp-kube-vip-plugin/compare/v0.1.5...v1.0.0
+[0.1.3]: https://github.com/privilegedescalation/headlamp-kube-vip-plugin/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/privilegedescalation/headlamp-kube-vip-plugin/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/privilegedescalation/headlamp-kube-vip-plugin/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/privilegedescalation/headlamp-kube-vip-plugin/releases/tag/v0.1.0
