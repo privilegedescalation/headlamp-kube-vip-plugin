@@ -8,7 +8,7 @@ Headlamp plugin for kube-vip virtual IP and load balancer visibility. Read-only 
 
 - **Plugin name**: `kube-vip`
 - **Target**: Headlamp >= v0.26
-- **Data sources**: kube-vip DaemonSet/pods in `headlamp`, Services (type:LoadBalancer), Nodes, Leases, `kubevip` ConfigMap
+- **Data sources**: kube-vip DaemonSet/pods in `kube-system`, Services (type:LoadBalancer), Nodes, Leases, `kubevip` ConfigMap
 - **Reference plugin**: `../headlamp-polaris-plugin`
 
 ## Commands
@@ -58,7 +58,7 @@ kube-vip uses **no CRDs**. All state comes from standard Kubernetes resources an
 
 ## Key constants (src/api/k8s.ts)
 
-- Namespace: `headlamp`
+- Namespace: `kube-system`
 - DaemonSet name: `kube-vip-ds`
 - Cloud provider name: `kube-vip-cloud-provider`
 - ConfigMap name: `kubevip`

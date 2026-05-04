@@ -20,7 +20,7 @@ Search for `kube-vip` in the Headlamp Plugin Manager (Settings → Plugins → C
 ## Requirements
 
 - Headlamp >= v0.26
-- kube-vip deployed in `headlamp` (DaemonSet or static pod)
+- kube-vip deployed in `kube-system` (DaemonSet or static pod)
 - Optional: kube-vip-cloud-provider for IP pool management
 
 ## RBAC
@@ -66,7 +66,7 @@ npm run lint       # ESLint
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| "kube-vip Not Detected" | No kube-vip pods in headlamp namespace | Install kube-vip per https://kube-vip.io/docs/installation/ |
+| "kube-vip Not Detected" | No kube-vip pods in kube-system | Install kube-vip per https://kube-vip.io/docs/installation/ |
 | No IP pools shown | kubevip ConfigMap not found | Install kube-vip-cloud-provider |
 | Services show "Pending" VIP | No IP pool configured or pool exhausted | Add IP ranges to kubevip ConfigMap |
 | Leader shows "—" | No kube-vip leases found | Verify leader election is enabled (`vip_leaderelection=true`) |
