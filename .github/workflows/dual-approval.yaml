@@ -9,7 +9,7 @@ on:
   pull_request_review:
     types: [submitted, dismissed]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
     types: [opened, reopened, synchronize]
 
 jobs:
