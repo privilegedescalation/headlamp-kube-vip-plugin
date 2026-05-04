@@ -14,6 +14,7 @@ on:
 
 jobs:
   dual-approval:
+    if: github.event.pull_request != null
     uses: privilegedescalation/.github/.github/workflows/dual-approval-check.yaml@main
     secrets: inherit
     with:
