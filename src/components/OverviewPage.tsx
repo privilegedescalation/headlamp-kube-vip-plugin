@@ -106,7 +106,9 @@ export default function OverviewPage() {
               {
                 name: 'Status',
                 value: (
-                  <StatusLabel status="error">No kube-vip pods found in {KUBE_VIP_NAMESPACE}</StatusLabel>
+                  <StatusLabel status="error">
+                    No kube-vip pods found in {KUBE_VIP_NAMESPACE}
+                  </StatusLabel>
                 ),
               },
               {
