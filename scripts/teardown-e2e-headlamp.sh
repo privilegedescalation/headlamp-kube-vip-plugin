@@ -26,5 +26,10 @@ if [ -f "$REPO_ROOT/.env.e2e" ]; then
   echo "Removed .env.e2e"
 fi
 
+echo "Killing any kubectl port-forward processes for ${E2E_RELEASE}..."
+pkill -f "kubectl port-forward.*${E2E_RELEASE}" 2>/dev/null || true
+
+rm -f "$REPO_ROOT/.port-forward.log"
+
 echo ""
 echo "E2E teardown complete."

@@ -150,18 +150,43 @@ done
 echo ""
 echo "E2E Headlamp is ready at: ${SVC_URL}"
 
+PF_PORT=4466
+echo ""
+echo "Starting kubectl port-forward to ${SVC_URL} on localhost:${PF_PORT}..."
+nohup kubectl port-forward -n "$E2E_NAMESPACE" "svc/${E2E_RELEASE}" "${PF_PORT}:80" > "$REPO_ROOT/.port-forward.log" 2>&1 &
+PF_PID=$!
+echo "  port-forward PID: ${PF_PID}"
+
+echo ""
+echo "Waiting for localhost:${PF_PORT} to be reachable via port-forward..."
+ATTEMPTS=0
+MAX_ATTEMPTS=24
+until curl -sf --max-time 5 "http://localhost:${PF_PORT}" -o /dev/null 2>/dev/null; do
+  ATTEMPTS=$((ATTEMPTS + 1))
+  if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
+    echo "ERROR: localhost:${PF_PORT} not reachable after $((MAX_ATTEMPTS * 5))s" >&2
+    cat "$REPO_ROOT/.port-forward.log" >&2
+    kill "${PF_PID}" 2>/dev/null || true
+    exit 1
+  fi
+  echo "  [${ATTEMPTS}/${MAX_ATTEMPTS}] port-forward not yet reachable, retrying in 5s..."
+  sleep 5
+done
+echo ""
+echo "Port-forward is ready at http://localhost:${PF_PORT}"
+
 echo ""
 echo "Creating service account token for E2E auth..."
 kubectl create serviceaccount headlamp-e2e-test   -n "$E2E_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
 TOKEN=$(kubectl create token headlamp-e2e-test -n "$E2E_NAMESPACE" --duration=1h 2>/dev/null || echo "")
 if [ -n "$TOKEN" ]; then
-  echo "HEADLAMP_URL=${SVC_URL}" > "$REPO_ROOT/.env.e2e"
+  echo "HEADLAMP_URL=http://localhost:${PF_PORT}" > "$REPO_ROOT/.env.e2e"
   echo "HEADLAMP_TOKEN=${TOKEN}" >> "$REPO_ROOT/.env.e2e"
-  echo "Wrote .env.e2e with HEADLAMP_URL and HEADLAMP_TOKEN"
+  echo "Wrote .env.e2e with HEADLAMP_URL=http://localhost:${PF_PORT} and HEADLAMP_TOKEN"
 else
   echo "  WARNING: Could not generate token."
 fi
 
 echo ""
-echo "E2E deployment complete."
+echo "E2E deployment complete. port-forward PID ${PF_PID} is running in background."
