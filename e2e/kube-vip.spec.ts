@@ -24,14 +24,14 @@ test.describe('kube-vip plugin smoke tests', () => {
 
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL(/kube-vip/);
-    await expect(page.getByRole('heading', { name: /kube.vip/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /kube.vip/i }).first()).toBeVisible();
   });
 
   test('kube-vip page renders content', async ({ page }) => {
     await page.goto('/c/main/kube-vip');
     await waitForSidebar(page);
 
-    await expect(page.getByRole('heading', { name: /kube.vip/i })).toBeVisible({
+    await expect(page.getByRole('heading', { name: /kube.vip/i }).first()).toBeVisible({
       timeout: 15_000,
     });
 
@@ -43,7 +43,7 @@ test.describe('kube-vip plugin smoke tests', () => {
   test('plugin settings page shows kube-vip plugin entry', async ({ page }) => {
     await page.goto('/settings/plugins');
     await page.waitForLoadState('networkidle');
-    await page.waitForSelector('[class*="PluginList"], [class*="plugins"], table, list', { timeout: 10_000 }).catch(() => {});
+    await page.waitForSelector('table, [class*="PluginList"], [class*="plugin"]', { timeout: 10_000 }).catch(() => {});
 
     const pluginEntry = page.locator('text=/kube.vip/i').first();
     await expect(pluginEntry).toBeVisible({ timeout: 30_000 });
