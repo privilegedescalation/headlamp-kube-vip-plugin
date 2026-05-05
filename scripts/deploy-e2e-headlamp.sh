@@ -118,7 +118,7 @@ metadata:
     app.kubernetes.io/name: headlamp
     app.kubernetes.io/instance: ${E2E_RELEASE}
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app.kubernetes.io/name: headlamp
     app.kubernetes.io/instance: ${E2E_RELEASE}
@@ -126,7 +126,6 @@ spec:
     - name: http
       port: 80
       targetPort: http
-      nodePort: 30080
       protocol: TCP
 EOF
 
@@ -151,31 +150,41 @@ done
 echo ""
 echo "E2E Headlamp is ready at: ${SVC_URL}"
 
-PF_PORT=4466
 echo ""
-echo "Getting a node internal IP for NodePort access..."
-NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' 2>/dev/null)
-if [ -z "${NODE_IP}" ]; then
-  echo "ERROR: Could not determine node InternalIP" >&2
-  exit 1
-fi
-echo "  node IP: ${NODE_IP}"
-
-echo ""
-echo "Waiting for NodePort ${NODE_IP}:30080 to be reachable..."
+echo "Getting LoadBalancer IP for Headlamp service..."
+LB_IP=""
 ATTEMPTS=0
 MAX_ATTEMPTS=24
-until curl -sf --max-time 5 "http://${NODE_IP}:30080" -o /dev/null 2>/dev/null; do
+while [ -z "${LB_IP}" ] || [ "${LB_IP}" = "<pending>" ]; do
   ATTEMPTS=$((ATTEMPTS + 1))
   if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
-    echo "ERROR: ${NODE_IP}:30080 not reachable after $((MAX_ATTEMPTS * 5))s" >&2
+    echo "ERROR: LoadBalancer IP not assigned after $((MAX_ATTEMPTS * 5))s" >&2
     exit 1
   fi
-  echo "  [${ATTEMPTS}/${MAX_ATTEMPTS}] NodePort not yet reachable, retrying in 5s..."
+  LB_IP=$(kubectl get svc "${E2E_RELEASE}" -n "$E2E_NAMESPACE" -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+  if [ -z "${LB_IP}" ] || [ "${LB_IP}" = "<pending>" ]; then
+    LB_IP=""
+    echo "  [${ATTEMPTS}/${MAX_ATTEMPTS}] LoadBalancer IP not yet assigned, retrying in 5s..."
+    sleep 5
+  fi
+done
+echo "  LoadBalancer IP: ${LB_IP}"
+
+echo ""
+echo "Waiting for Headlamp at http://${LB_IP}:80 to be reachable..."
+ATTEMPTS=0
+MAX_ATTEMPTS=24
+until curl -sf --max-time 5 "http://${LB_IP}:80" -o /dev/null 2>/dev/null; do
+  ATTEMPTS=$((ATTEMPTS + 1))
+  if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
+    echo "ERROR: http://${LB_IP}:80 not reachable after $((MAX_ATTEMPTS * 5))s" >&2
+    exit 1
+  fi
+  echo "  [${ATTEMPTS}/${MAX_ATTEMPTS}] LoadBalancer not yet reachable, retrying in 5s..."
   sleep 5
 done
 echo ""
-echo "Headlamp is ready at http://${NODE_IP}:30080"
+echo "Headlamp is ready at http://${LB_IP}:80"
 
 echo ""
 echo "Creating service account token for E2E auth..."
@@ -183,9 +192,9 @@ kubectl create serviceaccount headlamp-e2e-test   -n "$E2E_NAMESPACE" --dry-run=
 
 TOKEN=$(kubectl create token headlamp-e2e-test -n "$E2E_NAMESPACE" --duration=1h 2>/dev/null || echo "")
 if [ -n "$TOKEN" ]; then
-  echo "HEADLAMP_URL=http://${NODE_IP}:30080" > "$REPO_ROOT/.env.e2e"
+  echo "HEADLAMP_URL=http://${LB_IP}:80" > "$REPO_ROOT/.env.e2e"
   echo "HEADLAMP_TOKEN=${TOKEN}" >> "$REPO_ROOT/.env.e2e"
-  echo "Wrote .env.e2e with HEADLAMP_URL=http://${NODE_IP}:30080 and HEADLAMP_TOKEN"
+  echo "Wrote .env.e2e with HEADLAMP_URL=http://${LB_IP}:80 and HEADLAMP_TOKEN"
 else
   echo "  WARNING: Could not generate token."
 fi
