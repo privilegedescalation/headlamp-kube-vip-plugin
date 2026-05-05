@@ -22,14 +22,9 @@ echo "Cleaning up test service account..."
 kubectl delete serviceaccount headlamp-e2e-test -n "$E2E_NAMESPACE" --ignore-not-found
 
 if [ -f "$REPO_ROOT/.env.e2e" ]; then
-  rm "$REPO_ROOT/.env.e2e"
+  rm -f "$REPO_ROOT/.env.e2e"
   echo "Removed .env.e2e"
 fi
-
-echo "Killing any kubectl port-forward processes for ${E2E_RELEASE}..."
-pkill -f "kubectl port-forward.*${E2E_RELEASE}" 2>/dev/null || true
-
-rm -f "$REPO_ROOT/.port-forward.log"
 
 echo ""
 echo "E2E teardown complete."

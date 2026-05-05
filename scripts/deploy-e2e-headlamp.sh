@@ -118,7 +118,7 @@ metadata:
     app.kubernetes.io/name: headlamp
     app.kubernetes.io/instance: ${E2E_RELEASE}
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app.kubernetes.io/name: headlamp
     app.kubernetes.io/instance: ${E2E_RELEASE}
@@ -126,6 +126,7 @@ spec:
     - name: http
       port: 80
       targetPort: http
+      nodePort: 30080
       protocol: TCP
 EOF
 
@@ -152,28 +153,29 @@ echo "E2E Headlamp is ready at: ${SVC_URL}"
 
 PF_PORT=4466
 echo ""
-echo "Starting kubectl port-forward to ${SVC_URL} on localhost:${PF_PORT}..."
-nohup kubectl port-forward -n "$E2E_NAMESPACE" "svc/${E2E_RELEASE}" "${PF_PORT}:80" > "$REPO_ROOT/.port-forward.log" 2>&1 &
-PF_PID=$!
-echo "  port-forward PID: ${PF_PID}"
+echo "Getting a node internal IP for NodePort access..."
+NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}' 2>/dev/null)
+if [ -z "${NODE_IP}" ]; then
+  echo "ERROR: Could not determine node InternalIP" >&2
+  exit 1
+fi
+echo "  node IP: ${NODE_IP}"
 
 echo ""
-echo "Waiting for localhost:${PF_PORT} to be reachable via port-forward..."
+echo "Waiting for NodePort ${NODE_IP}:30080 to be reachable..."
 ATTEMPTS=0
 MAX_ATTEMPTS=24
-until curl -sf --max-time 5 "http://localhost:${PF_PORT}" -o /dev/null 2>/dev/null; do
+until curl -sf --max-time 5 "http://${NODE_IP}:30080" -o /dev/null 2>/dev/null; do
   ATTEMPTS=$((ATTEMPTS + 1))
   if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
-    echo "ERROR: localhost:${PF_PORT} not reachable after $((MAX_ATTEMPTS * 5))s" >&2
-    cat "$REPO_ROOT/.port-forward.log" >&2
-    kill "${PF_PID}" 2>/dev/null || true
+    echo "ERROR: ${NODE_IP}:30080 not reachable after $((MAX_ATTEMPTS * 5))s" >&2
     exit 1
   fi
-  echo "  [${ATTEMPTS}/${MAX_ATTEMPTS}] port-forward not yet reachable, retrying in 5s..."
+  echo "  [${ATTEMPTS}/${MAX_ATTEMPTS}] NodePort not yet reachable, retrying in 5s..."
   sleep 5
 done
 echo ""
-echo "Port-forward is ready at http://localhost:${PF_PORT}"
+echo "Headlamp is ready at http://${NODE_IP}:30080"
 
 echo ""
 echo "Creating service account token for E2E auth..."
@@ -181,12 +183,12 @@ kubectl create serviceaccount headlamp-e2e-test   -n "$E2E_NAMESPACE" --dry-run=
 
 TOKEN=$(kubectl create token headlamp-e2e-test -n "$E2E_NAMESPACE" --duration=1h 2>/dev/null || echo "")
 if [ -n "$TOKEN" ]; then
-  echo "HEADLAMP_URL=http://localhost:${PF_PORT}" > "$REPO_ROOT/.env.e2e"
+  echo "HEADLAMP_URL=http://${NODE_IP}:30080" > "$REPO_ROOT/.env.e2e"
   echo "HEADLAMP_TOKEN=${TOKEN}" >> "$REPO_ROOT/.env.e2e"
-  echo "Wrote .env.e2e with HEADLAMP_URL=http://localhost:${PF_PORT} and HEADLAMP_TOKEN"
+  echo "Wrote .env.e2e with HEADLAMP_URL=http://${NODE_IP}:30080 and HEADLAMP_TOKEN"
 else
   echo "  WARNING: Could not generate token."
 fi
 
 echo ""
-echo "E2E deployment complete. port-forward PID ${PF_PID} is running in background."
+echo "E2E deployment complete."
