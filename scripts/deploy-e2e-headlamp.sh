@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # deploy-e2e-headlamp.sh
 #
-# Deploys a stock Headlamp instance with the rook plugin loaded via
+# Deploys a stock Headlamp instance with the kube-vip plugin loaded via
 # a ConfigMap volume mount.
 #
 # E2E resources are deployed to the `headlamp-dev` namespace. Nothing
@@ -60,7 +60,7 @@ kubectl delete serviceaccount "${E2E_RELEASE}" -n "$E2E_NAMESPACE" --ignore-not-
 echo ""
 echo "Deploying Headlamp E2E instance..."
 
-kubectl apply -f - <<EOF
+if ! kubectl apply -f - <<EOF
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -88,7 +88,7 @@ spec:
         app.kubernetes.io/instance: ${E2E_RELEASE}
     spec:
       serviceAccountName: ${E2E_RELEASE}
-      automountServiceAccountToken: false
+      automountServiceAccountToken: true
       securityContext: {}
       containers:
         - name: headlamp
@@ -121,11 +121,11 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
           volumeMounts:
-            - name: rook-plugin
+            - name: headlamp-kube-vip-plugin
               mountPath: /headlamp/plugins/headlamp-kube-vip
               readOnly: true
       volumes:
-        - name: rook-plugin
+        - name: headlamp-kube-vip-plugin
           configMap:
             name: headlamp-kube-vip-plugin
 ---
@@ -148,9 +148,14 @@ spec:
       targetPort: http
       protocol: TCP
 EOF
+then
+  echo "ERROR: kubectl apply failed. Dumping cluster state..." >&2
+  kubectl get all -n "$E2E_NAMESPACE" 2>&1 || true
+  kubectl get events -n "$E2E_NAMESPACE" --sort-by='.lastTimestamp' 2>&1 | tail -30 || true
+  exit 1
+fi
 
 echo "Waiting for rollout..."
-sleep 2
 kubectl rollout status "deployment/${E2E_RELEASE}" \
   -n "$E2E_NAMESPACE" --timeout=120s
 
