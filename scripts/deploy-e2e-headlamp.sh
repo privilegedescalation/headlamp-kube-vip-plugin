@@ -121,11 +121,11 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
           volumeMounts:
-            - name: rook-plugin
+            - name: headlamp-kube-vip-plugin
               mountPath: /headlamp/plugins/headlamp-kube-vip
               readOnly: true
       volumes:
-        - name: rook-plugin
+        - name: headlamp-kube-vip-plugin
           configMap:
             name: headlamp-kube-vip-plugin
 ---
