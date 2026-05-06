@@ -1,4 +1,20 @@
 #!/usr/bin/env bash
+# deploy-e2e-headlamp.sh
+#
+# Deploys a stock Headlamp instance with the rook plugin loaded via
+# a ConfigMap volume mount.
+#
+# E2E resources are deployed to the `headlamp-dev` namespace. Nothing
+# persists beyond the test run — teardown cleans up all created resources.
+#
+# Prerequisites:
+#   - Plugin built (dist/ exists with plugin-main.js + package.json)
+#   - kubectl configured with cluster access
+#
+# Environment:
+#   E2E_NAMESPACE     — namespace for E2E Headlamp (default: headlamp-dev)
+#   E2E_RELEASE       — release/resource name prefix (default: headlamp-e2e)
+#   HEADLAMP_VERSION  — Headlamp image tag (default: latest)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -27,9 +43,13 @@ echo "  Release:   $E2E_RELEASE"
 echo ""
 echo "Creating ConfigMap with plugin files..."
 
-kubectl delete configmap headlamp-kube-vip-plugin   -n "$E2E_NAMESPACE" --ignore-not-found
+kubectl delete configmap headlamp-kube-vip-plugin \
+  -n "$E2E_NAMESPACE" --ignore-not-found
 
-kubectl create configmap headlamp-kube-vip-plugin   -n "$E2E_NAMESPACE"   --from-file="$DIST_DIR"   --from-file=package.json="$REPO_ROOT/package.json"
+kubectl create configmap headlamp-kube-vip-plugin \
+  -n "$E2E_NAMESPACE" \
+  --from-file="$DIST_DIR" \
+  --from-file=package.json="$REPO_ROOT/package.json"
 
 echo ""
 echo "Removing any existing E2E deployment (clean-start)..."
@@ -68,7 +88,7 @@ spec:
         app.kubernetes.io/instance: ${E2E_RELEASE}
     spec:
       serviceAccountName: ${E2E_RELEASE}
-      automountServiceAccountToken: true
+      automountServiceAccountToken: false
       securityContext: {}
       containers:
         - name: headlamp
@@ -101,11 +121,11 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 10
           volumeMounts:
-            - name: kube-vip-plugin
+            - name: rook-plugin
               mountPath: /headlamp/plugins/headlamp-kube-vip
               readOnly: true
       volumes:
-        - name: kube-vip-plugin
+        - name: rook-plugin
           configMap:
             name: headlamp-kube-vip-plugin
 ---
@@ -130,7 +150,9 @@ spec:
 EOF
 
 echo "Waiting for rollout..."
-kubectl rollout status "deployment/${E2E_RELEASE}"   -n "$E2E_NAMESPACE" --timeout=120s
+sleep 2
+kubectl rollout status "deployment/${E2E_RELEASE}" \
+  -n "$E2E_NAMESPACE" --timeout=120s
 
 SVC_URL="http://${E2E_RELEASE}.${E2E_NAMESPACE}.svc.cluster.local"
 
@@ -152,7 +174,8 @@ echo "E2E Headlamp is ready at: ${SVC_URL}"
 
 echo ""
 echo "Creating service account token for E2E auth..."
-kubectl create serviceaccount headlamp-e2e-test   -n "$E2E_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+kubectl create serviceaccount headlamp-e2e-test \
+  -n "$E2E_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
 TOKEN=$(kubectl create token headlamp-e2e-test -n "$E2E_NAMESPACE" --duration=1h 2>/dev/null || echo "")
 if [ -n "$TOKEN" ]; then
