@@ -1,5 +1,21 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>privilegedescalation/.github:renovate-config"]
+  "extends": ["github>privilegedescalation/.github:renovate-config"],
+  "packageRules": [
+    {
+      "description": "Auto-merge minor and patch updates for @kinvolk/headlamp-plugin",
+      "matchPackageNames": ["@kinvolk/headlamp-plugin"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Auto-merge security patches for @kinvolk/headlamp-plugin immediately",
+      "matchPackageNames": ["@kinvolk/headlamp-plugin"],
+      "matchUpdateTypes": ["security"],
+      "automerge": true,
+      "automergeType": "pr",
+      "labels": ["security"]
+    }
+  ]
 }
-
