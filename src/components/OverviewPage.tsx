@@ -21,6 +21,7 @@ import {
   isEgressEnabled,
   isKubeVipService,
   isPodReady,
+  KUBE_VIP_NAMESPACE,
   phaseToStatus,
 } from '../api/k8s';
 import { useKubeVipContext } from '../api/KubeVipDataContext';
@@ -105,7 +106,9 @@ export default function OverviewPage() {
               {
                 name: 'Status',
                 value: (
-                  <StatusLabel status="error">No kube-vip pods found in kube-system</StatusLabel>
+                  <StatusLabel status="error">
+                    No kube-vip pods found in {KUBE_VIP_NAMESPACE}
+                  </StatusLabel>
                 ),
               },
               {

@@ -12,10 +12,10 @@ This plugin is **read-only**. It does not perform any write operations against t
 
 - Services (type: LoadBalancer)
 - Nodes
-- Pods in `kube-system`
-- DaemonSets in `kube-system`
-- Leases in `kube-system`
-- ConfigMaps in `kube-system`
+- Pods in `headlamp`
+- DaemonSets in `headlamp`
+- Leases in `headlamp`
+- ConfigMaps in `headlamp`
 
 All data is fetched through Headlamp's built-in API proxy, which respects the user's existing RBAC permissions.
 
