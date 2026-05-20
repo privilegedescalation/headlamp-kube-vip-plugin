@@ -9,7 +9,7 @@ on:
 
 jobs:
   app-token:
-    runs-on: runners-privilegedescalation
+    runs-on: ubuntu-latest
     outputs:
       token: ${{ steps.app-token.outputs.token }}
     steps:
