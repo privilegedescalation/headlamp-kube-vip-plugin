@@ -17,7 +17,7 @@ A [Headlamp](https://headlamp.dev/) plugin providing visibility into [kube-vip](
 
 Search for `kube-vip` in the Headlamp Plugin Manager (Settings → Plugins → Catalog).
 
-> See [Plugin Installation Policy](https://git.farh.net/privilegedescalation/org/wiki/Plugin-Installation-Policy) for approved installation methods.
+> See [Plugin Installation Policy](https://git.farh.net/privilegedescalation/privilegedescalation.com/wiki/Plugin-Installation-Policy) for approved installation methods.
 
 
 ## Requirements
