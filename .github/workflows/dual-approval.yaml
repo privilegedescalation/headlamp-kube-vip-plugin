@@ -31,15 +31,25 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      # Neutralize any prior completed 'Promotion Gate' failures on this SHA so they
-      # do not persist as required-check failures after approval supersedes them.
+      # Neutralize any prior completed non-passing 'Promotion Gate' check-runs on the
+      # PR head SHA so they do not persist as required-check failures after approval.
+      # Two details that matter:
+      #   - context.sha is the merge commit, not the PR head; use payload instead.
+      #   - neutralize ALL non-success conclusions (failure, cancelled, timed_out …)
+      #     because cancel-in-progress produces 'cancelled' runs that also block merges.
       # JavaScript actions run on the runner host, unaffected by the container setting.
-      - name: Neutralize stale failed gate check-runs on this SHA
+      - name: Neutralize stale non-passing gate check-runs on this PR head SHA
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const sha = context.sha;
+            // context.sha is the merge commit and differs per event type — use the
+            // PR head SHA where check-runs actually live.
+            const sha = context.payload.pull_request?.head?.sha;
+            if (!sha) {
+              core.info('No pull_request payload — skipping neutralization.');
+              return;
+            }
             const owner = context.repo.owner;
             const repo = context.repo.repo;
 
@@ -53,8 +63,8 @@ jobs:
 
             let neutralized = 0;
             for (const run of data.check_runs) {
-              if (run.status !== 'completed') continue;   // skip own in-progress run
-              if (run.conclusion !== 'failure') continue; // only neutralize failures
+              if (run.status !== 'completed') continue;  // skip own in-progress run
+              if (run.conclusion === 'success') continue; // keep passing runs
               core.info(`Neutralizing stale check-run ${run.id} (was: ${run.conclusion})`);
               await github.rest.checks.update({
                 owner, repo,
