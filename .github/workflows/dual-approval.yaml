@@ -28,8 +28,7 @@ jobs:
     # Branch protection requires 'Promotion Gate', which is satisfied by the
     # API-created check-run below — not by this job's auto check-run.
     name: promotion-gate-runner
-    runs-on: ubuntu-latest
-    container: ubuntu:latest
+    runs-on: runners-privilegedescalation
     timeout-minutes: 5
 
     steps:
@@ -92,7 +91,7 @@ jobs:
             core.setOutput('check_run_id', String(checkRunId));
 
       - name: Install dependencies
-        run: apt-get update -qq && apt-get install -y --no-install-recommends ca-certificates curl jq
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ca-certificates curl jq
 
       - name: Check promotion approval
         id: approval
