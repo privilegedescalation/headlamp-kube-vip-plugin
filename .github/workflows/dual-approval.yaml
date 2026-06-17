@@ -11,22 +11,92 @@ on:
     branches: [uat, main]
     types: [opened, reopened, synchronize]
 
+# Cancel any in-progress gate run for the same PR when a new event fires.
+concurrency:
+  group: promotion-gate-${{ github.event.pull_request.number || 'no-pr' }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: read
+  checks: write
 
 jobs:
   promotion-gate:
-    name: Promotion Gate
+    # Name differs from 'Promotion Gate' so the auto check-run does not collide
+    # with the single canonical check-run this job manages via the Checks API.
+    # Branch protection requires 'Promotion Gate', which is satisfied by the
+    # API-created check-run below — not by this job's auto check-run.
+    name: promotion-gate-runner
     runs-on: ubuntu-latest
     container: ubuntu:latest
     timeout-minutes: 5
 
     steps:
+      # Create (or re-open) one canonical 'Promotion Gate' check-run per PR head
+      # SHA, identified by external_id so subsequent events find and update the
+      # same run in-place.  API-created check-runs are updatable by the same token;
+      # auto-created GitHub Actions check-runs are not (platform restriction since
+      # 2025-02-12).  JavaScript actions run on the runner host, not in the container.
+      - name: Initialize canonical Promotion Gate check-run
+        id: gate-check
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const sha = context.payload.pull_request?.head?.sha;
+            if (!sha) {
+              core.setOutput('check_run_id', '');
+              core.info('No PR payload — skipping check-run management.');
+              return;
+            }
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prNumber = context.payload.pull_request.number;
+            const externalId = `promotion-gate-pr-${prNumber}`;
+
+            // Find the API-managed check-run we own (identified by external_id).
+            // GitHub Actions auto-created runs have no external_id and cannot be
+            // updated — this only matches runs we created via checks.create.
+            const { data } = await github.rest.checks.listForRef({
+              owner, repo,
+              ref: sha,
+              check_name: 'Promotion Gate',
+              filter: 'all',
+              per_page: 100,
+            });
+
+            const existing = data.check_runs.find(r => r.external_id === externalId);
+
+            let checkRunId;
+            if (existing) {
+              core.info(`Re-opening existing check-run ${existing.id} for re-evaluation.`);
+              await github.rest.checks.update({
+                owner, repo,
+                check_run_id: existing.id,
+                status: 'in_progress',
+              });
+              checkRunId = existing.id;
+            } else {
+              core.info(`Creating canonical check-run for PR #${prNumber} at ${sha}.`);
+              const { data: created } = await github.rest.checks.create({
+                owner, repo,
+                name: 'Promotion Gate',
+                head_sha: sha,
+                external_id: externalId,
+                status: 'in_progress',
+              });
+              checkRunId = created.id;
+            }
+
+            core.setOutput('check_run_id', String(checkRunId));
+
       - name: Install dependencies
         run: apt-get update -qq && apt-get install -y --no-install-recommends ca-certificates curl jq
 
       - name: Check promotion approval
+        id: approval
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -132,3 +202,39 @@ jobs:
             echo "Promotion gate failed: waiting for ${GATE_NAME} approval from ${REQUIRED_REVIEWER}."
             exit 1
           fi
+
+      # Always write the final result back to the canonical check-run, even on failure.
+      - name: Finalize canonical Promotion Gate check-run
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const checkRunId = '${{ steps.gate-check.outputs.check_run_id }}';
+            const passed = '${{ steps.approval.outcome }}' === 'success';
+
+            if (!checkRunId) {
+              core.info('No check-run ID — cannot update canonical check-run.');
+              if (!passed) core.setFailed('Promotion gate failed: waiting for approval.');
+              return;
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            await github.rest.checks.update({
+              owner, repo,
+              check_run_id: parseInt(checkRunId),
+              status: 'completed',
+              conclusion: passed ? 'success' : 'failure',
+              output: {
+                title: passed ? 'Promotion gate passed' : 'Promotion gate failed',
+                summary: passed
+                  ? 'Required reviewer has approved this PR.'
+                  : 'Waiting for required reviewer approval.',
+              },
+            });
+
+            if (!passed) {
+              core.setFailed('Promotion gate failed: waiting for approval.');
+            }
