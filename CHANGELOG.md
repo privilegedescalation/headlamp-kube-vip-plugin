@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1] - 2026-06-17
+
+### Changed
+
+- Verify branch protection: trivial whitespace/doc update (PRI-1816)
+
 ## [1.0.0] - 2026-03-24
 
 ### Added
