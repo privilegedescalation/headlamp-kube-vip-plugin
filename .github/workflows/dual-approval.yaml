@@ -11,6 +11,13 @@ on:
     branches: [uat, main]
     types: [opened, reopened, synchronize]
 
+# Cancel any in-progress gate run for the same PR when a new event fires.
+# Superseded runs become 'cancelled' (not 'failed'), so they do not persist
+# as required-check failures that block the merge.
+concurrency:
+  group: promotion-gate-${{ github.event.pull_request.number || 'no-pr' }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: read
